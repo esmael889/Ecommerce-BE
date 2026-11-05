@@ -1,4 +1,3 @@
-
 import app from "./index.js";
 
 const PORT = process.env.PORT || 7000;
