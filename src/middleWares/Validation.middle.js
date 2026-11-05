@@ -6,7 +6,7 @@ export const Validation_middle=(Schema)=>{
         const result=Schema.validate(data,{abortEarly:false});
         const errorMessage=result.error.details.map((x)=>x.message);
         if(result.error){
-            return next(new Error(errorMessage))
+            return next(new Error("validation error"))
         }
         // res.json({result});
         

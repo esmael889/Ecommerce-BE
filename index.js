@@ -11,16 +11,21 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Database connection
-DBConnection();
-
 // Health check
 app.get("/", (req, res) => {
     res.json({
         message: "Ecommerce API is running successfully"
     });
 });
-
+// Database Connection Middleware
+app.use(async (req, res, next) => {
+    try {
+        await DBConnection();
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 // Routes
 app.use("/auth", AllRouter.AuthRouter);
 app.use("/user", AllRouter.userRouter);
