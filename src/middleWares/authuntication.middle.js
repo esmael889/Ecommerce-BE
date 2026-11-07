@@ -32,6 +32,9 @@ export const authuntication=async(req,res,next)=>{
                     return res.json({message:"user Not Found"})
                 }
                 req.user=user;
+
+        console.log("USER_TOKEN exists:", Boolean(process.env.USER_TOKEN));
+console.log("USER_TOKEN length:", process.env.USER_TOKEN?.length);
                 return next();
     } catch (error) {
         if(error.name=="TokenExpiredError"&&error.message=="jwt expired"){

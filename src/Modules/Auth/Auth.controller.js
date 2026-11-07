@@ -92,10 +92,12 @@ const Login=async(req,res,next)=>{
 
         //// Generate Token
 
-        const token=jwt.sign({id:user._id},user.role==RolesTypes.user?process.env.USER_TOKEN:process.env.Admin_Token,{expiresIn:20});
+        const token=jwt.sign({id:user._id},user.role==RolesTypes.user?process.env.USER_TOKEN:process.env.Admin_Token,{expiresIn:"1d"});
 
         user.token=token;
     await  user.save();
+    console.log("USER_TOKEN exists:", Boolean(process.env.USER_TOKEN));
+console.log("USER_TOKEN length:", process.env.USER_TOKEN?.length);
 
         res.json({message:"user Loged In Successfully",token})
     } catch (error) {
