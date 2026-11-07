@@ -24,11 +24,6 @@ export const authuntication=async(req,res,next)=>{
                 break;
         }
 
-        console.log("Bearer:", Bearer);
-console.log("Token exists:", Boolean(token));
-console.log("Token Signature:", tokenSignature ? "Found" : "Missing");
-console.log("User Secret exists:", Boolean(process.env.USER_TOKEN));
-console.log("Admin Secret exists:", Boolean(process.env.Admin_Token));
                 /// verify token
                 const {id}=jwt.verify(token,tokenSignature);
                 // console.log(verify_Token);
