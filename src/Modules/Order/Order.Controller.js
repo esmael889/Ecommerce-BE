@@ -182,8 +182,8 @@ try {
 }
 
 
-async function Create_order(e,res){
-        const cart=await CartModel.findById(e.client_reference_id);
+async function Create_order(session,res){
+        const cart=await CartModel.findById(session.client_reference_id);
         //3- create the order
         const existingOrder = await OrderModel.findOne({
             stripeSessionId: session.id
@@ -193,10 +193,10 @@ async function Create_order(e,res){
             return existingOrder;
         }
         const Order=await OrderModel.create({
-            user:e.body.user,
+            user:session.body.user,
             cartItems:cart.cartItems,
-            TotalOrderPrice:e.amount_total/100,
-            shippingAddress:e.metadata.shippingAddress,
+            TotalOrderPrice:session.amount_total/100,
+            shippingAddress:session.metadata.shippingAddress,
             paymentMethod:"card",
             isPaid:true,
             stripeSessionId: session.id,
