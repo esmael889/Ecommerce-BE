@@ -83,7 +83,10 @@ const get_All_orders=async(req,res,next)=>{
 
 const Create_Checkout_Session=async(req,res,next)=>{
     try {
-
+console.log("Request Body:", req.body);
+console.log("User:", req.body.user);
+console.log("Authenticated User:", req.user?._id);
+console.log("Cart ID:", req.params._id);
             //1- get cart
         const cart=await CartModel.findById(req.params._id);
 
@@ -130,6 +133,7 @@ const Create_Checkout_Session=async(req,res,next)=>{
 
 const Create_webhook=async(req,res,next)=>{
 try {
+    console.log("Webhook Signature:", Boolean(req.headers["stripe-signature"]));
      let event;
      const endpointSecret = process.env.Secret_EndPoint;
     if (!endpointSecret) {
@@ -137,7 +141,12 @@ try {
 }
   if (endpointSecret) {
     // Get the signature sent by Stripe
-    const signature = req.headers['stripe-signature'].toString();
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+    return res.status(400).json({
+        message: "Stripe signature is missing"
+    });
+}
     try {
       event = getStripe().webhooks.constructEvent(
         req.body,
