@@ -24,7 +24,7 @@ const Create_Cash_Order=async(req,res,next)=>{
         //3- create the order
 
         const Order=await OrderModel.create({
-            user:req.body.user,
+            user:req.user._id.toString(),
             cartItems:cart.cartItems,
             TotalOrderPrice,
             shippingAddress:req.body.shippingAddress
@@ -83,19 +83,12 @@ const get_All_orders=async(req,res,next)=>{
 
 const Create_Checkout_Session=async(req,res,next)=>{
     try {
-console.log("Request Body:", req.body);
-console.log("User:", req.body.user);
-console.log("Authenticated User:", req.user?._id);
-console.log("Cart ID:", req.params._id);
             //1- get cart
         const cart=await CartModel.findById(req.params._id);
 if (!cart) {
     return res.status(404).json({ message: "Cart not found" });
 }
 
-if (!req.body.user) {
-    return res.status(400).json({ message: "User ID is required" });
-}
         //2- Calc Total Price
         const TotalOrderPrice=cart.PriceAfterDiscount?cart.PriceAfterDiscount:cart.TotalPrice;
 
@@ -122,7 +115,7 @@ if (!req.body.user) {
                 city: req.body.shippingAddress?.city || "",
                 street: req.body.shippingAddress?.street || "",
                 phone: req.body.shippingAddress?.phone || "",
-                userId:String(req.body.user)
+                userId:req.user._id.toString()
             }
         })
 
@@ -174,7 +167,11 @@ try {
       console.log("Checkout completed",session.id);
 
       // order will  be created here
-   await  Create_order(session)
+  if (session.payment_status === "paid") {
+        const order = await Create_order(session);
+
+        console.log("Order Created:", order._id);
+    }
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
@@ -188,7 +185,7 @@ try {
 }
 
 
-async function Create_order(session,res){
+async function Create_order(session){
         const cart=await CartModel.findById(session.client_reference_id);
         //3- create the order
         const existingOrder = await OrderModel.findOne({
@@ -198,15 +195,25 @@ async function Create_order(session,res){
         if (existingOrder) {
             return existingOrder;
         }
+
+            // 3. Get User ID from Stripe Metadata
+    const userId = session.metadata?.userId;
+        if (!userId) {
+        throw new Error("User ID is missing from Stripe metadata");
+    }
         const Order=await OrderModel.create({
-            user:session.body.user,
+            user:userId,
             cartItems:cart.cartItems,
             TotalOrderPrice:session.amount_total/100,
-            shippingAddress:session.metadata.shippingAddress,
+            shippingAddress:{
+                city:session.metadata.city,
+                street:session.metadata.street,
+                phone:session.metadata.phone,
+            },
             paymentMethod:"card",
             isPaid:true,
             stripeSessionId: session.id,
-            paidAt:Date.now()
+            paidAt:new Date()
         })
 
        
@@ -225,12 +232,10 @@ async function Create_order(session,res){
             await productModel.bulkWrite(Options);
 
             //5 >> clear The Cart
-            await CartModel.findByIdAndDelete({
-                _id:req.params._id
-            })
+            await CartModel.findByIdAndDelete(cart._id)
         }
         
-        res.status(201).json({message:"order Created Successfully",Order})
+       return Order
     }
 export {
     Create_Cash_Order,
