@@ -5,9 +5,10 @@ import cors from "cors";
 
 import { DBConnection } from "./src/DB/Connection.js";
 import * as AllRouter from "./src/index.routes.js";
+import { Create_webhook } from "./src/Modules/Order/Order.Controller.js";
 
 const app = express();
-
+app.post('/webhook', express.raw({type: 'application/json'}),Create_webhook);
 app.use(express.json());
 app.use(cors());
 

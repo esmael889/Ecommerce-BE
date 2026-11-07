@@ -127,11 +127,48 @@ const Create_Checkout_Session=async(req,res,next)=>{
 }
 
 
+const Create_webhook=async(req,res,next)=>{
+try {
+     let event;
+     const endpointSecret = process.env.Secret_EndPoint;
+  if (endpointSecret) {
+    // Get the signature sent by Stripe
+    const signature = req.headers['stripe-signature'].toString();
+    try {
+      event = getStripe().webhooks.constructEvent(
+        req.body,
+        signature,
+        process.env.Secret_EndPoint
+      );
+    } catch (err) {
+      console.log(` Webhook signature verification failed.`, err.message);
+      return res.sendStatus(400);
+    }
+  }
 
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      console.log("Checkout completed",session.id);
+
+      // order will  be created here
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Return a response to acknowledge receipt of the event
+  res.json({received: true});
+} catch (error) {
+    return next(error)
+}
+}
 
 export {
     Create_Cash_Order,
     get_user_orders,
     get_All_orders,
-    Create_Checkout_Session
+    Create_Checkout_Session,
+    Create_webhook
 }
