@@ -7,9 +7,9 @@ export const RolesTypes={
     admin:"admin"
 }
 export const authuntication=async(req,res,next)=>{
-        const {x}=req.headers;
+        const {authorization}=req.headers;
 
-        const [Bearer,token]=x.split(" ");
+        const [Bearer,token]=authorization.split(" ");
         let tokenSignature=undefined;
     try {
         switch (Bearer) {
