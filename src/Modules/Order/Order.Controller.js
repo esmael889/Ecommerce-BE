@@ -153,6 +153,7 @@ try {
       console.log("Checkout completed",session.id);
 
       // order will  be created here
+      Create_order(session)
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
@@ -165,6 +166,44 @@ try {
 }
 }
 
+
+async function Create_order(e){
+        const cart=await CartModel.findById(e.client_reference_id);
+        //3- create the order
+
+        const Order=await OrderModel.create({
+            user:req.body.user,
+            cartItems:cart.cartItems,
+            TotalOrderPrice:e.amount_total/100,
+            shippingAddress:e.metadata.shippingAddress,
+            paymentMethod:"card",
+            isPaid:true,
+            paidAt:Date.now()
+        })
+
+        await Order.save();
+        if(Order){
+            let Options=cart.cartItems.map(item=>({
+                updateOne:{
+                    filter:{
+                        _id:item.product
+                    },
+                    update:{
+                        $inc:{Quantity:-item.Quantity,sold:item.Quantity}
+                    }
+                }
+            }))
+
+            await productModel.bulkWrite(Options);
+
+            //5 >> clear The Cart
+            await CartModel.findByIdAndDelete({
+                _id:req.params._id
+            })
+        }
+        
+        res.status(201).json({message:"order Created Successfully",Order})
+    }
 export {
     Create_Cash_Order,
     get_user_orders,
