@@ -168,7 +168,7 @@ try {
       console.log("Checkout completed",session.id);
 
       // order will  be created here
-      Create_order(session)
+   await  Create_order(session)
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
