@@ -38,6 +38,11 @@ const OrderSchema=new Schema({
         type:Boolean,
         default:false
     },
+stripeSessionId: {
+    type: String,
+    unique: true,
+    sparse: true
+},
     deliveredAt:Date
 },{timestamps:true})
 

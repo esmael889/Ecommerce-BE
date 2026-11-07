@@ -108,11 +108,12 @@ const Create_Checkout_Session=async(req,res,next)=>{
         success_url: "http://localhost:7000/payment/success",
         cancel_url: "http://localhost:7000/payment/cancel",
             customer_email:req.body.email,
-            client_reference_id:req.params._id,
+            client_reference_id:cart._id.toString(),
             metadata:{
                 city: req.body.shippingAddress?.city || "",
                 street: req.body.shippingAddress?.street || "",
-                phone: req.body.shippingAddress?.phone || ""
+                phone: req.body.shippingAddress?.phone || "",
+                userId:req.body.user.toString()
             }
         })
 
@@ -131,6 +132,9 @@ const Create_webhook=async(req,res,next)=>{
 try {
      let event;
      const endpointSecret = process.env.Secret_EndPoint;
+    if (!endpointSecret) {
+  throw new Error("Stripe webhook secret is missing");
+}
   if (endpointSecret) {
     // Get the signature sent by Stripe
     const signature = req.headers['stripe-signature'].toString();
@@ -140,6 +144,8 @@ try {
         signature,
         process.env.Secret_EndPoint
       );
+
+ 
     } catch (err) {
       console.log(` Webhook signature verification failed.`, err.message);
       return res.sendStatus(400);
@@ -167,21 +173,28 @@ try {
 }
 
 
-async function Create_order(e){
+async function Create_order(e,res){
         const cart=await CartModel.findById(e.client_reference_id);
         //3- create the order
+        const existingOrder = await OrderModel.findOne({
+            stripeSessionId: session.id
+        });
 
+        if (existingOrder) {
+            return existingOrder;
+        }
         const Order=await OrderModel.create({
-            user:req.body.user,
+            user:e.body.user,
             cartItems:cart.cartItems,
             TotalOrderPrice:e.amount_total/100,
             shippingAddress:e.metadata.shippingAddress,
             paymentMethod:"card",
             isPaid:true,
+            stripeSessionId: session.id,
             paidAt:Date.now()
         })
 
-        await Order.save();
+       
         if(Order){
             let Options=cart.cartItems.map(item=>({
                 updateOne:{

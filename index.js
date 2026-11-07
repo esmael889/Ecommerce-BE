@@ -8,6 +8,14 @@ import * as AllRouter from "./src/index.routes.js";
 import { Create_webhook } from "./src/Modules/Order/Order.Controller.js";
 
 const app = express();
+app.use(async (req, res, next) => {
+    try {
+        await DBConnection();
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 app.post('/webhook', express.raw({type: 'application/json'}),Create_webhook);
 app.use(express.json());
 app.use(cors());
@@ -19,14 +27,7 @@ app.get("/", (req, res) => {
     });
 });
 // Database Connection Middleware
-app.use(async (req, res, next) => {
-    try {
-        await DBConnection();
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
+
 // Routes
 app.use("/auth", AllRouter.AuthRouter);
 app.use("/user", AllRouter.userRouter);
