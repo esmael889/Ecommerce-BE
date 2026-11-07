@@ -89,7 +89,13 @@ console.log("Authenticated User:", req.user?._id);
 console.log("Cart ID:", req.params._id);
             //1- get cart
         const cart=await CartModel.findById(req.params._id);
+if (!cart) {
+    return res.status(404).json({ message: "Cart not found" });
+}
 
+if (!req.body.user) {
+    return res.status(400).json({ message: "User ID is required" });
+}
         //2- Calc Total Price
         const TotalOrderPrice=cart.PriceAfterDiscount?cart.PriceAfterDiscount:cart.TotalPrice;
 
@@ -116,7 +122,7 @@ console.log("Cart ID:", req.params._id);
                 city: req.body.shippingAddress?.city || "",
                 street: req.body.shippingAddress?.street || "",
                 phone: req.body.shippingAddress?.phone || "",
-                userId:req.body.user.toString()
+                userId:String(req.body.user)
             }
         })
 
