@@ -23,6 +23,12 @@ export const authuntication=async(req,res,next)=>{
             default:
                 break;
         }
+
+        console.log("Bearer:", Bearer);
+console.log("Token exists:", Boolean(token));
+console.log("Token Signature:", tokenSignature ? "Found" : "Missing");
+console.log("User Secret exists:", Boolean(process.env.USER_TOKEN));
+console.log("Admin Secret exists:", Boolean(process.env.Admin_Token));
                 /// verify token
                 const {id}=jwt.verify(token,tokenSignature);
                 // console.log(verify_Token);
@@ -49,6 +55,8 @@ export const authuntication=async(req,res,next)=>{
                 res.json({message:"Token Refreshed Successfully",refresh_token})
         }
         // res.json({message:"authntication error",error})
+        console.log("JWT Error Name:", error.name);
+console.log("JWT Error Message:", error.message);
         return next(error)
     }
 }
